@@ -1,0 +1,1 @@
+[{"fields": {"resource_name": "Practitioner", "json_schema": "{}"}, "model": "fhir.supportedresourcetype", "pk": 1}, {"fields": {"resource_name": "Organization", "json_schema": "{}"}, "model": "fhir.supportedresourcetype", "pk": 2}]
