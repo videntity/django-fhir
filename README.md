@@ -1,5 +1,5 @@
-README
-======
+django-fhir
+===========
 
 This software is very begining phases now. Not ready for prime time.
 
