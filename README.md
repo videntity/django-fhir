@@ -23,12 +23,14 @@ Include the direct URLconf in your project urls.py like this:
 
 Create your database tables.
 
-   python manage.py syncdb
+
+    python manage.py syncdb
 
 Support a couple resource types by adding them in the admin or 
 usi the folloing command to activate `Practioner` and `Organization`.
 
-    python manage.py [your download path]/django-fhir/fhir/fixtures/provider-directory-resources.json
+
+    python manage.py loaddata [your download path]/django-fhir/fhir/fixtures/provider-directory-resources.json
 
 
 Use the APIs. Visit http://127.0.0.1:8000/fhir/hello to verify 
