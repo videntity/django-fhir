@@ -89,11 +89,11 @@ class FHIR_Create_TestCase(TestCase):
         
         
     def test_fhir_create(self):
-        """test_fhir_create_isalive"""
+        """test_fhir_create_get_reroutes_to_search"""
         c = Client()
         response = c.get(self.url)
                 
         # Check some response details
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "create")
+        self.assertContains(response, "search")
    

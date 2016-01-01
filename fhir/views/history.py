@@ -1,6 +1,5 @@
 from django.shortcuts import render
 from ..models import SupportedResourceType
-from django.shortcuts import render
 from collections import OrderedDict
 from django.http import HttpResponse
 import json
