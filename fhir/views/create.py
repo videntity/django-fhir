@@ -1,6 +1,5 @@
 from django.shortcuts import render
 from ..models import SupportedResourceType
-from django.shortcuts import render
 from collections import OrderedDict
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -8,6 +7,8 @@ import json, uuid
 from jsonschema import validate
 import datetime
 from ..utils import kickout_404, kickout_400, kickout_500
+from .hello import hello
+from .search import search
 
 @csrf_exempt
 def create(request, resource_type):
@@ -15,12 +16,20 @@ def create(request, resource_type):
     
     # Example client use in curl:
     # curl -H "Content-Type: application/json" --data @test.json http://127.0.0.1:8000/fhir/Practitioner
-
+    
+    #re-route to hello if no resource type is given:
+    if not resource_type:
+        return hello(request)
     try:
         rt = SupportedResourceType.objects.get(resource_name=resource_type)    
     except SupportedResourceType.DoesNotExist:
         msg = "%s is not a supported resource type on this FHIR server." % (resource_type)
         return kickout_404(msg)
+    
+    #This is a search so re-route 
+    if request.method == "GET":
+        return search(request, resource_type)
+    
     
     if request.method == 'POST':
                 #Check if request body is JSON ------------------------
@@ -64,13 +73,10 @@ def create(request, resource_type):
         if j.get('meta').get('lastUpdated'):
              meta['lastUpdated'] = j.get('meta').get('lastUpdated')
         else:
-             meta['versionId'] = "%sZ" % (datetime.datetime.utcnow().isoformat())
+             meta['lastUpdated'] = "%sZ" % (datetime.datetime.utcnow().isoformat())
         
-        
-
         meta['id']       = response['id']
         response['meta'] = meta
-        
         
         hr = HttpResponse(json.dumps(response, indent=4), status=201,
                                     content_type="application/json") 
@@ -80,15 +86,19 @@ def create(request, resource_type):
                          meta['id'],
                          meta['versionId'])
         return hr
+    
 
         
-    #This is something other than POST (i.e. a  GET)
-    od = OrderedDict()
-    od['request_method']= request.method
-    od['interaction_type'] = "create"
-    od['resource_type']    = resource_type
-    od['note'] = "Perform an HTTP POST to this URL with the JSON resource as the request body."
-    
-    
-    return HttpResponse(json.dumps(od, indent=4),
-                        content_type="application/json")
+        
+        
+    #This is something other than GET or POST (i.e. a  GET)
+    if request.method not in ("GET", "POST"):
+        od = OrderedDict()
+        od['request_method']= request.method
+        od['interaction_type'] = "create"
+        od['resource_type']    = resource_type
+        od['note'] = "Perform an HTTP POST to this URL with the JSON resource as the request body."
+        
+        
+        return HttpResponse(json.dumps(od, indent=4),
+                            content_type="application/json")

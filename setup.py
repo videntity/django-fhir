@@ -21,7 +21,8 @@ setup(name="django-fhir",
       url="https://gitbub.com/videntity/django-fhir",
       download_url="https://gitbub.com/videntity/django-fhir/tarball/master",
       install_requires=[
-        'django==1.8.5',],
+        'django==1.8.5', 'django-djmongo', 'django-oauth-toolkit',
+        'django-cors-headers'],
       include_package_data=True,
       scripts=[],
       classifiers=[
