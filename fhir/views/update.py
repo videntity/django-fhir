@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from ..utils import kickout_404
 import json
 from django.views.decorators.csrf import csrf_exempt
-
+from ..models import SupportedResourceType
 
 @csrf_exempt
 def update(request, resource_type, id):
