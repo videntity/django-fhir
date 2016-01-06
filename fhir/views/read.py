@@ -6,6 +6,7 @@ from ..utils import kickout_404
 from django.http import HttpResponse
 import json
 
+
 def read(request, resource_type, id):
     """Read FHIR Interaction"""
     # Example client use in curl:

@@ -3,6 +3,8 @@ django-fhir
 
 This software is very begining phases now. Not ready for prime time.
 
+(working on compatibility with 
+
 To install type the following in a shell:
 
     git clone https://github.com/videntity/django-fhir.git
@@ -27,7 +29,7 @@ Create your database tables.
     python manage.py syncdb
 
 Support a couple resource types by adding them in the admin or 
-usi the folloing command to activate `Practioner` and `Organization`.
+usi the following command to activate `Practitioner` and `Organization`.
 
 
     python manage.py loaddata [your download path]/django-fhir/fhir/fixtures/provider-directory-resources.json
