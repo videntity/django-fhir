@@ -88,7 +88,7 @@ class FHIR_Create_TestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         
         
-    def test_fhir_create(self):
+    def test_fhir_create_get_reroutes_to_search(self):
         """test_fhir_create_get_reroutes_to_search"""
         c = Client()
         response = c.get(self.url)
