@@ -1,7 +1,7 @@
 django-fhir
 ===========
 
-This software is in the very begining phases now. It is not ready for prime time at all.
+This software is in the very begining phases now. It is not ready for prime time at all. That said, here ishow to install it.
 
 To install type the following in a shell:
 
@@ -33,6 +33,5 @@ usi the folloing command to activate `Practioner` and `Organization`.
     python manage.py loaddata [your download path]/django-fhir/fhir/fixtures/provider-directory-resources.json
 
 
-Use the APIs. Visit http://127.0.0.1:8000/fhir/hello to verify 
-the installation.
+Use the APIs. Visit http://127.0.0.1:8000/fhir/hello to verify the installation.
    
