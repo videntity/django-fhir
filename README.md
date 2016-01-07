@@ -1,7 +1,7 @@
 django-fhir
 ===========
 
-This software is very begining phases now. Not ready for prime time.
+This software is in the very begining phases now. It is not ready for prime time at all.
 
 To install type the following in a shell:
 
