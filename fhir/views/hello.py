@@ -10,17 +10,14 @@ def hello(request):
     # Example client use in curl:
     # curl http://127.0.0.1:8000/fhir/hello
     res_types = SupportedResourceType.objects.all()    
-    rnames = []
+    interactions = []
     for r in res_types:
-        rnames.append(r.resource_name)
-  
-    #This is something other than POST (i.e. a  GET)
+        rt = OrderedDict()
+        rt[r.resource_name] =  r.get_supported_interaction_types()
+        interactions.append(rt)
     od = OrderedDict()
-    od['request_method']= request.method
-    od['supported_resource_types']    = rnames
-    od['supported_interaction_types'] = ["create", "read",
-                                         "update", "delete",
-                                         "search"]
+    od['request_method']                        = request.method
+    od['resources_and_interaction_types'] = interactions
     od['note'] = "Hello.  Welcome to the FHIR Server."
     return HttpResponse(json.dumps(od, indent=4),
                         content_type="application/json")

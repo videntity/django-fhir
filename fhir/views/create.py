@@ -14,21 +14,21 @@ from .search import search
 @csrf_exempt
 def create(request, resource_type):
     """Create FHIR Interaction"""
-    
     # Example client use in curl:
     # curl -H "Content-Type: application/json" --data @test.json http://127.0.0.1:8000/fhir/Practitioner
-    
+    interaction_type = 'create'
     #re-route to hello if no resource type is given:
     if not resource_type:
         return hello(request)
+    
     try:
         rt = SupportedResourceType.objects.get(resource_name=resource_type)
-        if rt.access_denied(access_to_check="fhir_create") and request.method == "GET":
+        if interaction_type not in rt.get_supported_interaction_types()  and request.method == "GET":
             #GET means that this is a search so re-route
             return search(request, resource_type)
 
-        elif rt.access_denied(access_to_check="fhir_create"):
-            msg = "%s access denied to %s records on this FHIR server." % ("CREATE",
+        elif interaction_type not in rt.get_supported_interaction_types() :
+            msg = "The interaction %s is not permitted on %s FHIR resources on this FHIR sever." % (interaction_type,
                                                                            resource_type)
             return kickout_403(msg)
 
