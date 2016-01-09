@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from collections import OrderedDict
 from django.http import HttpResponse
-from ..utils import kickout_404
+from ..utils import (kickout_403, kickout_404)
 import json
 from django.views.decorators.csrf import csrf_exempt
 from ..models import SupportedResourceType
@@ -13,7 +13,12 @@ def update(request, resource_type, id):
     # curl -X PUT -H "Content-Type: application/json" --data @test.json http://127.0.0.1:8000/fhir/Practitioner/12345
     
     try:
-        rt = SupportedResourceType.objects.get(resource_name=resource_type)    
+        rt = SupportedResourceType.objects.get(resource_name=resource_type)
+        if rt.access_denied(access_to_check="fhir_update"):
+            msg = "%s access denied to %s records on this FHIR server." % ("UPDATE",
+                                                                           resource_type)
+            return kickout_403(msg)
+
     except SupportedResourceType.DoesNotExist:
         msg = "%s is not a supported resource type on this FHIR server." % (resource_type)
         return kickout_404(msg)
