@@ -1,12 +1,13 @@
+import sys
 from django.shortcuts import render
 from ..models import SupportedResourceType
 from collections import OrderedDict
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json, uuid
-from jsonschema import validate
+from jsonschema import validate, ValidationError
 import datetime
-from ..utils import kickout_404, kickout_400, kickout_500
+from ..utils import (kickout_404, kickout_403, kickout_400, kickout_500)
 from .hello import hello
 from .search import search
 
@@ -21,16 +22,24 @@ def create(request, resource_type):
     if not resource_type:
         return hello(request)
     try:
-        rt = SupportedResourceType.objects.get(resource_name=resource_type)    
+        rt = SupportedResourceType.objects.get(resource_name=resource_type)
+        if rt.access_denied(access_to_check="fhir_create") and request.method == "GET":
+            #GET means that this is a search so re-route
+            return search(request, resource_type)
+
+        elif rt.access_denied(access_to_check="fhir_create"):
+            msg = "%s access denied to %s records on this FHIR server." % ("CREATE",
+                                                                           resource_type)
+            return kickout_403(msg)
+
     except SupportedResourceType.DoesNotExist:
         msg = "%s is not a supported resource type on this FHIR server." % (resource_type)
         return kickout_404(msg)
-    
-    #This is a search so re-route 
+
+    # Catch all for GETs to re-direct to search if CREATE permission is valid
     if request.method == "GET":
         return search(request, resource_type)
-    
-    
+
     if request.method == 'POST':
                 #Check if request body is JSON ------------------------
         try:
