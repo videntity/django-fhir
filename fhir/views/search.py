@@ -5,6 +5,7 @@ from django.http import HttpResponse
 import json
 from ..utils import kickout_400
 from .utils import check_access_interaction_and_resource_type
+from ..settings import FHIR_BACKEND
 
 def search(request, resource_type):
     interaction_type = 'search'
@@ -20,7 +21,11 @@ def search(request, resource_type):
     if request.method != 'GET':
         msg = "HTTP method %s not supported at this URL." % (request.method)
         return kickout_400(msg)
-    
+
+    return FHIR_BACKEND.find(request, resource_type)
+
+
+    # Move to fhir_io_mongo (Plugable back-end)
     od = OrderedDict()
     od['request_method']= request.method
     od['interaction_type'] = "search"
