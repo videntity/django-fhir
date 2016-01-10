@@ -16,6 +16,15 @@ def kickout_400(reason, status_code=400):
                         content_type="application/json")
 
 
+def kickout_401(reason, status_code=401):
+    response= OrderedDict()
+    response["code"] = status_code
+    response["errors"] = [reason,]
+    return HttpResponse(json.dumps(response, indent = 4),
+                        status=status_code,     
+                        content_type="application/json")
+
+
 def kickout_403(reason, status_code=403):
     response= OrderedDict()
     response["code"] = status_code
