@@ -5,6 +5,7 @@ from collections import OrderedDict
 from ..utils import (kickout_404, kickout_403)
 from django.http import HttpResponse
 import json
+from ..settings import FHIR_BACKEND
 from .utils import check_access_interaction_and_resource_type
 
 from django.conf import settings
@@ -21,6 +22,10 @@ def read(request, resource_type, id):
         #If not allowed, return a 4xx error.
         return deny
 
+    #testing direct response
+    return FHIR_BACKEND.read(request, resource_type, id)
+
+    # move to fhir_io_mongo (pluggable backend)
 
     od = OrderedDict()
     od['request_method']= request.method
