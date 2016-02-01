@@ -14,12 +14,13 @@ import requests
 
 from collections import OrderedDict
 from xml.dom import minidom
-from xml.etree.ElementTree import Element, tostring
+from xml.etree.ElementTree import tostring
 
 from ..utils import (build_params,
                      crosswalk_id,
                      dict_to_xml,
-                     error_status)
+                     error_status,
+                     check_rt_controls)
 from ..models import ResourceTypeControl
 
 from fhir.models import SupportedResourceType
@@ -57,67 +58,123 @@ def hello_world(request, resource_type, id):
     od['note'] = "Hello World from fhir_io_hapi.get.hello_world: %s,{%s}[%s]" % (request,
                                                                         resource_type,
                                                                         id)
-    # return HttpResponse(json.dumps(od, indent=4),
-    #                         content_type="application/%s" % od['format'])
 
     return "Hello World from fhir_io_hapi.get.hello_world: %s,{%s}[%s] %s" % (request,
                                                                               resource_type,
                                                                               id, od)
 
 
-def read(request, resource_type, id, *arg, **kwargs):
+def read(request, resource_type, id, *args, **kwargs):
     """
     Read from remote FHIR Server
     :param resourcetype:
     :param id:
     :return:
+
+
+    # Example client use in curl:
+    # curl  -X GET http://127.0.0.1:8000/fhir/Practitioner/1234
+
     """
 
     interaction_type = 'read'
+
+    read = generic_read(request, interaction_type, id, vid, *args, **kwargs)
+
+    return read
+
+
+def history(request, resource_type, id, *args, **kwargs):
+    """
+    History specific read
+    GET [base]/[type]/[id]/_history/ {?_format=[mime-type]}
+    """
+    interaction_type = '_history'
+
+    history = generic_read(request, interaction_type, resource_type, id, vid=None, *args, **kwargs)
+
+    return history
+
+
+def vread(request, resource_type, id, vid, *args, **kwargs):
+    """
+    Version specific read
+    GET [base]/[type]/[id]/_history/[vid] {?_format=[mime-type]}
+    """
+    interaction_type = 'vread'
+
+    vread = generic_read(request, interaction_type, resource_type, id, vid, *args, **kwargs)
+
+    return vread
+
+
+def generic_read(request, interaction_type, resource_type, id, vid=None, *args, **kwargs):
+    """
+    Read from remote FHIR Server
+    :param resourcetype:
+    :param id:
+    :return:
+
+
+    # Example client use in curl:
+    # curl  -X GET http://127.0.0.1:8000/fhir/Practitioner/1234
+
+    """
+
+    # interaction_type = 'read' or '_history' or 'vread'
+    if settings.DEBUG:
+        print("interaction_type:", interaction_type)
     #Check if this interaction type and resource type combo is allowed.
     deny = check_access_interaction_and_resource_type(resource_type, interaction_type)
     if deny:
         #If not allowed, return a 4xx error.
         return deny
 
-    # Check for controls to apply to this resource_type
-    if settings.DEBUG:
-        print("Resource_Type = ", resource_type)
-    rt = SupportedResourceType.objects.get(resource_name=resource_type)
-    if settings.DEBUG:
-        print("Working with SupportedResourceType:", rt)
-    try:
-        srtc = ResourceTypeControl.objects.get(resource_name=rt)
-    except ResourceTypeControl.DoesNotExist:
-        srtc = None
+    srtc = check_rt_controls(resource_type)
+    # We get back an Supported ResourceType Control record or None
 
     if settings.DEBUG:
-        print('We have Control:', srtc)
         if srtc:
             print("Parameter Rectrictions:", srtc.parameter_restriction())
+        else:
+            print("No Resource Controls found")
 
-    if srtc and srtc.force_url_id_override:
-        id = crosswalk_id(request, id)
-        if settings.DEBUG:
-            print("crosswalk:", id)
+    if srtc:
+        if srtc.force_url_id_override:
+            key = crosswalk_id(request, id)
+            # Crosswalk returns the new id or returns None
+            if settings.DEBUG:
+                print("crosswalk:", key)
+        else:
+            # No Id_Overide so use the original id
+            key = id
+    else:
+        key = id
 
-    if id == None:
-        return kickout_404("FHIR_IO_HAPI:Search needs a specific Patient Id "
-                           "which was not available")
+    # Do we have a key?
+    if key == None:
+        return kickout_404("FHIR_IO_HAPI:Search needs a valid Resource Id that is linked "
+                           "to the authenticated user "
+                           "(%s) which was not available" % request.user)
+
+    # Now we get to process the API Call.
 
     if settings.DEBUG:
-        print("now we need to evaluate the parameters and arguments"
-              " to work with ", id, "and ", request.user)
+        print("Now we need to evaluate the parameters and arguments"
+              " to work with ", key, "and ", request.user)
         print("GET Parameters:", request.GET, ":")
 
+    mask = False
+    if srtc:
+        if srtc.force_url_id_override:
+            mask = True
 
     in_fmt = "json"
     Txn = {'name': resource_type,
            'display': resource_type,
-           'mask': True,
+           'mask': mask,
            'server': settings.FHIR_SERVER,
            'locn': "/baseDstu2/"+resource_type+"/",
-           'template': 'v1api/%s.html' % resource_type,
            'in_fmt': in_fmt,
            }
 
@@ -138,7 +195,12 @@ def read(request, resource_type, id, *arg, **kwargs):
     if settings.DEBUG:
         print("Parameters:", pass_params)
 
-    pass_to = Txn['server'] + Txn['locn'] + id + "/"
+    if interaction_type == "vread":
+        pass_to = Txn['server'] + Txn['locn'] + key + "/" + "_history" + "/" + vid
+    elif interaction_type == "_history":
+        pass_to = Txn['server'] + Txn['locn'] + key + "/" + "_history"
+    else:  # interaction_type == "read":
+        pass_to = Txn['server'] + Txn['locn'] + key + "/"
 
     print("Here is the URL to send, %s now get parameters %s" % (pass_to,pass_params))
 
@@ -168,9 +230,11 @@ def read(request, resource_type, id, *arg, **kwargs):
 
     od = OrderedDict()
     od['request_method']= request.method
-    od['interaction_type'] = "read"
+    od['interaction_type'] = interaction_type
     od['resource_type']    = resource_type
-    od['id'] = id
+    od['id'] = key
+    if vid != None:
+        od['vid'] = vid
 
     if settings.DEBUG:
         print("Query List:", request.META['QUERY_STRING'] )
@@ -188,7 +252,7 @@ def read(request, resource_type, id, *arg, **kwargs):
         fmt = ''
     od['format'] = fmt
     od['bundle'] = text_out
-    od['note'] = 'This is the %s Pass Thru (%s) ' % (resource_type,id)
+    od['note'] = 'This is the %s Pass Thru (%s) ' % (resource_type,key)
 
     if settings.DEBUG:
         od['note'] += 'using: %s ' % (pass_to)

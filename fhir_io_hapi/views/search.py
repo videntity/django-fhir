@@ -20,6 +20,7 @@ from ..utils import (crosswalk_id, dict_to_xml, error_status)
 from ..models import ResourceTypeControl
 
 from ..utils import build_params
+from ..fhirpit import build_url, mask_id
 
 from fhir.models import SupportedResourceType
 
@@ -68,8 +69,7 @@ def find(request, resource_type, *arg, **kwargs):
     Txn = {'name': resource_type,
            'display': resource_type,
            'mask': True,
-           'server': settings.FHIR_SERVER,
-           'locn': "/baseDstu2/"+resource_type+"/",
+           'server': build_url(Resource=resource_type),
            'template': 'v1api/%s.html' % resource_type,
            'in_fmt': in_fmt,
            }
@@ -89,15 +89,16 @@ def find(request, resource_type, *arg, **kwargs):
 
     pass_params = build_params(request.GET, skip_parm)
 
-
-    if "?" in pass_params and srtc.apply_patient_filter:
-        id = crosswalk_id(request)
-        pass_params += urlencode({'x':"&patient="+str(id)})[2:]
+    if "?" in pass_params:
+            if srtc != None:
+                if srtc.apply_patient_filter:
+                    id = crosswalk_id(request)
+                    pass_params += urlencode({'x':"&patient="+str(id)})[2:]
 
     if settings.DEBUG:
         print("Parameters:", pass_params)
 
-    pass_to = Txn['server'] + Txn['locn']
+    pass_to = build_url(Resource=resource_type)
 
     print("Here is the URL to send, %s now get parameters %s" % (pass_to,pass_params))
 

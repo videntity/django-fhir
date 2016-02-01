@@ -22,6 +22,13 @@ from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponse
 
+from .choices import FORMAT_OPTIONS_CHOICES
+from .models import ResourceTypeControl
+
+from fhir.models import SupportedResourceType
+
+
+
 __author__ = 'Mark Scrimshire:@ekivemark'
 
 
@@ -97,9 +104,9 @@ def concat_string(target, msg=[], delimiter="", last=""):
 
 
 def crosswalk_id(request, id=None, element='fhir_url_id'):
-    # Lookup up in Crosswalk with request.user
-    # First we need to check for AnonymousUser
-
+    """Lookup up in Crosswalk with request.user
+       First we need to check for AnonymousUser
+    """
     if request.user.id == None:
         if settings.DEBUG:
             print('Sorry - AnonymousUser gets no information')
@@ -139,9 +146,9 @@ def crosswalk_id(request, id=None, element='fhir_url_id'):
 
 
 def dict_to_xml(tag, d):
-    '''
+    """
     Turn a simple dict of key/value pairs into XML
-    '''
+    """
     elem = Element(tag)
     for key, val in d.items():
         child = Element(key)
@@ -184,3 +191,118 @@ def error_status(r, status_code=404, reason="undefined error occured"):
     return HttpResponse(json.dumps(response, indent = 4),
                         status=status_code,
                         content_type="application/json")
+
+
+def get_format(in_get):
+    """
+    Receive request.GET and check for _format
+    if json or xml return .lower()
+    if none return "json"
+    :param in_get:
+    :return: "json" or "xml"
+    """
+    got_get = get_to_lower(in_get)
+
+    # set default to return
+    result = ""
+
+    if "_format" in got_get:
+        # we have something to process
+
+        if settings.DEBUG:
+            print("In Get:",in_get)
+        fmt = got_get.get('_format','').lower()
+
+        if settings.DEBUG:
+            print("Format Returned:", fmt)
+
+        # Check for a valid lower case value
+        if fmt in FORMAT_OPTIONS_CHOICES:
+            result = fmt
+        else:
+            if settings.DEBUG:
+                print("No Match with Format Options:", fmt)
+
+    return result
+
+
+def get_to_lower(in_get):
+    """
+    Force the GET parameter keys to lower case
+    :param in_get:
+    :return:
+    """
+
+    if not in_get:
+        if settings.DEBUG:
+            print("get_to_lower: Nothing to process")
+        return in_get
+
+    got_get = OrderedDict()
+    # Deal with capitalization in request.GET.
+    # force to lower
+    for value in in_get:
+
+        got_get[value.lower()] = in_get.get(value,"")
+        if settings.DEBUG:
+            print("Got key", value.lower(), ":", got_get[value.lower()] )
+
+    if settings.DEBUG:
+        print("Returning lowercase request.GET", got_get)
+
+    return got_get
+
+
+def get_url_query_string(get, skip_parm=[]):
+    """
+    Receive the request.GET Query Dict
+    Evaluate against skip_parm by skipping any entries in skip_parm
+    Return a query string ready to pass to a REST API.
+    http://hl7-fhir.github.io/search.html#all
+
+    # We need to force the key to lower case and skip params should be
+    # lower case too
+
+    eg. _lastUpdated=>2010-10-01&_tag=http://acme.org/codes|needs-review
+
+    :param get: {}
+    :param skip_parm: []
+    :return: Query_String (QS)
+    """
+
+    # Check we got a get dict
+    if not get:
+        return ""
+
+    qs = ""
+    # Now we work through the parameters
+
+    for k, v in get.items():
+        if settings.DEBUG:
+            print("K/V: [",k, "/", v,"]" )
+        if k.lower() in skip_parm:
+            pass
+        else:
+            # Build the query_string
+            if len(qs) > 1:
+                # Use & to concatanate items
+                qs = qs + "&"
+            # build the string
+            qs = qs + k.strip() + "=" + v.strip()
+
+    return qs
+
+
+def check_rt_controls(resource_type):
+    # Check for controls to apply to this resource_type
+    if settings.DEBUG:
+        print("Resource_Type = ", resource_type)
+    rt = SupportedResourceType.objects.get(resource_name=resource_type)
+    if settings.DEBUG:
+        print("Working with SupportedResourceType:", rt)
+    try:
+        srtc = ResourceTypeControl.objects.get(resource_name=rt)
+    except ResourceTypeControl.DoesNotExist:
+        srtc = None
+
+    return srtc
