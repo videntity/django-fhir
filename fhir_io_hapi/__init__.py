@@ -13,8 +13,9 @@ __author__ = 'Mark Scrimshire:@ekivemark'
 
 
 # Hello World is here to test the loading of the module from fhir.settings
+# from .settings import *
 from .views.get import hello_world
 
-from .views.get import read
+from .views.get import (read, vread, history)
 
 from .views.search import find

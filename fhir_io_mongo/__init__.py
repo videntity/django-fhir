@@ -16,4 +16,6 @@ __author__ = 'Mark Scrimshire:@ekivemark'
 from .views.get import hello_world
 from .views.get import read
 
+from .settings import *
+
 
