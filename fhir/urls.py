@@ -8,7 +8,7 @@ from .views.rud import read_or_update_or_delete
 from .views.search import search
 from .views.history import history
 from .views.hello import hello
-from .views.oauth import oauth_create, oauth_update
+from .views.oauth import oauth_create, oauth_update, oauth_read_or_update_or_delete
 
 
 urlpatterns = patterns('',    
@@ -17,18 +17,29 @@ urlpatterns = patterns('',
     url(r'hello', hello,
         name='fhir_hello'),
 
-    # oAuth2 URLs
+    # oAuth2 URLs ------------------------------------
     # These are for create and update only for now.
         
-    #update
+    # #update
+    # url(r'oauth2/(?P<resource_type>[^/]+)/(?P<id>[^/]+)',
+    #     oauth_update,
+    #     name='fhir_oauth_update'),
+    # 
+
+    
+    
+    # ---------------------------------------
+    # Read GET
+    # Update PUT
+    # Delete DELETE
+    # ---------------------------------------
     url(r'oauth2/(?P<resource_type>[^/]+)/(?P<id>[^/]+)',
-        oauth_update,
-        name='fhir_oauth_update'),
+        oauth_read_or_update_or_delete,
+        name='fhir_oauth_read_or_update_or_delete'),
     
     #create ------------------------------
     url(r'oauth2/(?P<resource_type>[^/]+)', oauth_create,
         name='fhir_oauth_create'),
-    
     
     #URLs with no authentication
     #Interactions on Resources
@@ -57,9 +68,4 @@ urlpatterns = patterns('',
         name='fhir_search'),
     
 
-
-
-
-
-    
     )
