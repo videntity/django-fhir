@@ -11,7 +11,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 
 setup(name="django-fhir",
-      version="0.0.0.3",
+      version="0.0.0.4",
       license='GPL2', 
       packages=['fhir', 'fhir.views', 'fhir.tests','fhir_io_mongo',],
       description="A FHIR Server as a reusable Django application",
