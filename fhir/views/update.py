@@ -19,7 +19,8 @@ def update(request, resource_type, id):
     if deny:
         #If not allowed, return a 4xx error.
         return deny
-    
+
+    # Replace Section below with call to function in fhir_io_mongo or pluggable backend
     od = OrderedDict()
     od['request_method']= request.method
     od['interaction_type'] = "update"

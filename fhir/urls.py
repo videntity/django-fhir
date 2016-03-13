@@ -6,7 +6,7 @@ from django.conf.urls import patterns, include, url
 from .views.create import create
 from .views.rud import read_or_update_or_delete
 from .views.search import search
-from .views.history import history
+from .views.history import history, vread
 from .views.hello import hello
 from .views.oauth import oauth_create, oauth_update, oauth_read_or_update_or_delete
 
@@ -43,6 +43,10 @@ urlpatterns = patterns('',
     
     #URLs with no authentication
     #Interactions on Resources
+    #Vread GET --------------------------------
+    url(r'(?P<resource_type>[^/]+)/(?P<id>[^/]+)/_history/(?P<vid>[^/]+)', vread,
+        name='fhir_vread'),
+
     #History GET ------------------------------
     url(r'(?P<resource_type>[^/]+)/(?P<id>[^/]+)/_history', history,
         name='fhir_history'),

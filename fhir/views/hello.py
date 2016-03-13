@@ -1,9 +1,8 @@
-from django.shortcuts import render
 from ..models import SupportedResourceType
 from collections import OrderedDict
 from django.http import HttpResponse
 
-import json, uuid
+import json
 
 def hello(request):
     """Hello FHIR"""
