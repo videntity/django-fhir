@@ -11,9 +11,9 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 
 setup(name="django-fhir",
-      version="0.0.0.4",
+      version="0.0.0.5",
       license='GPL2', 
-      packages=['fhir', 'fhir.views', 'fhir.tests','fhir_io_mongo',],
+      packages=['fhir', 'fhir.views', 'fhir.tests',],
       description="A FHIR Server as a reusable Django application",
       long_description=README,
       author="Alan Viars (contributions - Mark Scrimshire)",
