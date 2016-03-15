@@ -5,7 +5,6 @@ from django.http import HttpResponse
 import json
 from .utils import check_access_interaction_and_resource_type
 from ..utils import (kickout_404, kickout_403, kickout_400)
-from ..settings import FHIR_BACKEND
 
 def history(request, resource_type, id):
     
@@ -25,7 +24,7 @@ def history(request, resource_type, id):
         return kickout_400(msg)
 
     #testing direct response
-    return FHIR_BACKEND.history(request, resource_type, id)
+    #return FHIR_BACKEND.history(request, resource_type, id)
 
 
     od = OrderedDict()

@@ -1,32 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from django.conf.urls import patterns, include, url
+from django.conf.urls import include, url
 
 from .views.create import create
 from .views.rud import read_or_update_or_delete
 from .views.search import search
 from .views.history import history, vread
 from .views.hello import hello
-from .views.oauth import oauth_create, oauth_update, oauth_read_or_update_or_delete
+from .views.oauth import oauth_create, oauth_read_or_update_or_delete
 
 
-urlpatterns = patterns('',    
+urlpatterns = [   
     
     #Hello
     url(r'hello', hello,
         name='fhir_hello'),
 
     # oAuth2 URLs ------------------------------------
-    # These are for create and update only for now.
-        
-    # #update
-    # url(r'oauth2/(?P<resource_type>[^/]+)/(?P<id>[^/]+)',
-    #     oauth_update,
-    #     name='fhir_oauth_update'),
-    # 
-
-    
     
     # ---------------------------------------
     # Read GET
@@ -40,6 +31,14 @@ urlpatterns = patterns('',
     #create ------------------------------
     url(r'oauth2/(?P<resource_type>[^/]+)', oauth_create,
         name='fhir_oauth_create'),
+    
+    
+    # #update
+    # url(r'oauth2/(?P<resource_type>[^/]+)/(?P<id>[^/]+)',
+    #     oauth_update,
+    #     name='fhir_oauth_update'),
+    # 
+    
     
     #URLs with no authentication
     #Interactions on Resources
@@ -72,4 +71,4 @@ urlpatterns = patterns('',
         name='fhir_search'),
     
 
-    )
+    ]
